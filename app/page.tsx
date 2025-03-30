@@ -44,7 +44,6 @@ export default function Home() {
   const [error, setError] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [fileUploaded, setFileUploaded] = useState(false);
   const [categories, setCategories] = useState<Record<string, string>>({});
 
@@ -165,21 +164,21 @@ export default function Home() {
     }, 0); // Delay to allow UI to update
   };
 
-  const formatDateForInput = (date: Date | null) => {
+  const formatDateForInput = useCallback((date: Date | null) => {
     if (!date) return '';
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  };
+  }, []);
 
-  const formatDateForDisplay = (date: Date | null) => {
+  const formatDateForDisplay = useCallback((date: Date | null) => {
     if (!date) return '';
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}.${month}.${year}`;
-  };
+  }, []);
 
   // Optimize category change handler with useCallback
   const handleCategoryChange = useCallback((id: string, category: string) => {
@@ -189,7 +188,27 @@ export default function Home() {
     }));
   }, []);
 
-  const exportToCSV = () => {
+  // Memoize filtered transactions to avoid unnecessary recalculations
+  const filteredTransactions = useMemo(() => {
+    if (transactions.length === 0) return [];
+    
+    let filtered = [...transactions];
+    
+    if (startDate) {
+      const startDateTime = new Date(startDate).getTime();
+      filtered = filtered.filter(t => t.date && t.date.getTime() >= startDateTime);
+    }
+    
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999); // End of the day
+      filtered = filtered.filter(t => t.date && t.date.getTime() <= endDateTime.getTime());
+    }
+    
+    return filtered;
+  }, [transactions, startDate, endDate]);
+
+  const exportToCSV = useCallback(() => {
     if (filteredTransactions.length === 0) {
       setError('No transactions to export');
       return;
@@ -246,27 +265,7 @@ export default function Home() {
     } catch (err) {
       setError('Failed to export: ' + (err as Error).message);
     }
-  };
-
-  // Memoize filtered transactions to avoid unnecessary recalculations
-  const filteredTransactions = useMemo(() => {
-    if (transactions.length === 0) return [];
-    
-    let filtered = [...transactions];
-    
-    if (startDate) {
-      const startDateTime = new Date(startDate).getTime();
-      filtered = filtered.filter(t => t.date && t.date.getTime() >= startDateTime);
-    }
-    
-    if (endDate) {
-      const endDateTime = new Date(endDate);
-      endDateTime.setHours(23, 59, 59, 999); // End of the day
-      filtered = filtered.filter(t => t.date && t.date.getTime() <= endDateTime.getTime());
-    }
-    
-    return filtered;
-  }, [transactions, startDate, endDate]);
+  }, [filteredTransactions, categories, formatDateForDisplay, formatDateForInput, setError]);
 
   // Calculate totals for the filtered transactions (memoized)
   const { totalOut, totalIn, balance } = useMemo(() => {

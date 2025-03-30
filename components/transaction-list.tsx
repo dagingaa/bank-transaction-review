@@ -1,10 +1,12 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface Transaction {
   id: string;
@@ -42,6 +44,25 @@ export function TransactionList({
   totalOut,
   totalIn
 }: TransactionListProps) {
+  const [descriptionFilter, setDescriptionFilter] = useState('');
+  const [selectedBulkCategory, setSelectedBulkCategory] = useState('');
+  
+  const filteredTransactions = useMemo(() => {
+    if (!descriptionFilter) return transactions;
+    
+    return transactions.filter(transaction => 
+      transaction.Forklaring?.toLowerCase().includes(descriptionFilter.toLowerCase())
+    );
+  }, [transactions, descriptionFilter]);
+  
+  const handleApplyAllCategories = () => {
+    if (!selectedBulkCategory) return;
+    
+    filteredTransactions.forEach(transaction => {
+      handleCategoryChange(transaction.id, selectedBulkCategory);
+    });
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -49,6 +70,44 @@ export function TransactionList({
         <CardDescription>All transactions in the selected date range</CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 flex items-center gap-2 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Filter by description..."
+              value={descriptionFilter}
+              onChange={(e) => setDescriptionFilter(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Select value={selectedBulkCategory} onValueChange={setSelectedBulkCategory}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleApplyAllCategories}
+              disabled={!selectedBulkCategory || filteredTransactions.length === 0}
+              className="whitespace-nowrap"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Apply to {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
+            </Button>
+          </div>
+        </div>
         <div className="overflow-x-auto">
           {/* Table header - separate from virtualized list */}
           <div className="border-b border-border">
@@ -122,14 +181,14 @@ export function TransactionList({
           </div>
 
           {/* Virtualized List */}
-          {transactions.length > 0 && (
+          {filteredTransactions.length > 0 && (
             <List
               height={600}
               width="100%"
-              itemCount={transactions.length}
+              itemCount={filteredTransactions.length}
               itemSize={60}
               itemData={{
-                transactions,
+                transactions: filteredTransactions,
                 categories,
                 handleCategoryChange,
                 formatDateForDisplay,
@@ -182,12 +241,20 @@ export function TransactionList({
           <div className="border-t border-border bg-muted/50">
             <div className="grid grid-cols-5 gap-4 p-3">
               <div className="font-bold">TOTAL</div>
-              <div>{transactions.length} transactions</div>
+              <div>
+                {filteredTransactions.length} 
+                {filteredTransactions.length !== transactions.length && (
+                  <span className="text-muted-foreground text-xs ml-1">
+                    (filtered from {transactions.length})
+                  </span>
+                )}
+                {" transactions"}
+              </div>
               <div className="text-right font-bold text-red-600 dark:text-red-400">
-                {totalOut.toFixed(2)}
+                {filteredTransactions.reduce((sum, t) => sum + t.amountOut, 0).toFixed(2)}
               </div>
               <div className="text-right font-bold text-green-600 dark:text-green-400">
-                {totalIn.toFixed(2)}
+                {filteredTransactions.reduce((sum, t) => sum + t.amountIn, 0).toFixed(2)}
               </div>
               <div></div>
             </div>

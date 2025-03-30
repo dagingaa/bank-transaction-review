@@ -141,7 +141,7 @@ export function TransactionImport({
             // Description detection
             if (lowerHeader.includes('description') || lowerHeader.includes('desc') || 
                 lowerHeader.includes('narrative') || lowerHeader.includes('details') || 
-                lowerHeader.includes('forklaring') || lowerHeader.includes('text')) {
+                lowerHeader.includes('text')) {
               initialMapping.description = header;
             }
             

@@ -24,7 +24,7 @@ interface Transaction {
   id: string;
   date: Date | null;
   Dato?: string;
-  Forklaring?: string;
+  description?: string;
   Rentedato?: string;
   amountOut: number;
   amountIn: number;
@@ -75,7 +75,7 @@ export function TransactionList({
     // Apply description filter
     if (descriptionFilter) {
       filtered = filtered.filter(transaction => 
-        transaction.Forklaring?.toLowerCase().includes(descriptionFilter.toLowerCase())
+        transaction.description?.toLowerCase().includes(descriptionFilter.toLowerCase())
       );
     }
     
@@ -351,7 +351,7 @@ export function TransactionList({
                       {transaction.date ? data.formatDateForDisplay(transaction.date) : ''}
                     </div>
                     <div className="truncate max-w-md col-span-3">
-                      {transaction.Forklaring}
+                      {transaction.description}
                     </div>
                     <div className={`text-right ${transaction.amountOut > 0 ? 'text-red-600 dark:text-red-400' : ''}`}>
                       {transaction.amountOut > 0 ? transaction.amountOut.toFixed(2) : ''}

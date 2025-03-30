@@ -17,7 +17,7 @@ interface Transaction {
   id: string;
   date: Date | null;
   Dato?: string;
-  Forklaring?: string;
+  description?: string;
   Rentedato?: string;
   amountOut: number;
   amountIn: number;
@@ -148,7 +148,7 @@ export default function Home() {
                   ...item,
                   id,
                   date,
-                  Forklaring: description, // Keep the original field for compatibility
+                  description, // Use description directly
                   amountOut,
                   amountIn
                 };
@@ -290,8 +290,8 @@ export default function Home() {
             bValue = b.date ? b.date.getTime() : 0;
             break;
           case 'description':
-            aValue = (a.Forklaring || '').toLowerCase();
-            bValue = (b.Forklaring || '').toLowerCase();
+            aValue = (a.description || '').toLowerCase();
+            bValue = (b.description || '').toLowerCase();
             break;
           case 'amountOut':
             aValue = a.amountOut || 0;
@@ -343,7 +343,7 @@ export default function Home() {
       // Map transactions to rows
       const rows = filteredTransactions.map(transaction => [
         formatDateForDisplay(transaction.date),
-        transaction.Forklaring,
+        transaction.description,
         transaction.Rentedato,
         transaction.amountOut,
         transaction.amountIn,

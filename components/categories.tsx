@@ -168,8 +168,8 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
   };
 
   const handleRemoveCategory = (categoryToRemove: string) => {
-    // Don't allow removing the default category "Kategori"
-    if (categoryToRemove === "Kategori") return;
+    // Don't allow removing the default category "(Not set)"
+    if (categoryToRemove === "(Not set)") return;
     
     onCategoriesChange(categories.filter(category => category !== categoryToRemove));
   };
@@ -461,15 +461,15 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
             {categories.map((category) => (
               <Badge 
                 key={category} 
-                variant={category === "Kategori" ? "outline" : "secondary"} 
-                className={`gap-1 px-2 py-1 ${category === "Kategori" ? "border-dashed" : ""}`}
+                variant={category === "(Not set)" ? "outline" : "secondary"} 
+                className={`gap-1 px-2 py-1 ${category === "(Not set)" ? "border-dashed" : ""}`}
               >
                 {category}
                 <button
                   onClick={() => handleRemoveCategory(category)}
-                  className={`ml-1 rounded-full hover:bg-muted ${category === "Kategori" ? "invisible" : ""}`}
-                  disabled={category === "Kategori"}
-                  aria-hidden={category === "Kategori"}
+                  className={`ml-1 rounded-full hover:bg-muted ${category === "(Not set)" ? "invisible" : ""}`}
+                  disabled={category === "(Not set)"}
+                  aria-hidden={category === "(Not set)"}
                 >
                   <X className="h-3 w-3" />
                   <span className="sr-only">Remove {category}</span>

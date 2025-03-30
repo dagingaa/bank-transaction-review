@@ -25,7 +25,7 @@ interface Transaction {
 
 // Initial default categories
 const DEFAULT_CATEGORIES = [
-  "Kategori", // Default/initial value
+  "(Not set)", // Default/initial value
   "Annet", 
   "Dag-Inge", 
   "Dagligvarer", 
@@ -251,8 +251,8 @@ export default function Home() {
             bValue = b.amountIn || 0;
             break;
           case 'category':
-            aValue = (categories[a.id] || 'Kategori').toLowerCase();
-            bValue = (categories[b.id] || 'Kategori').toLowerCase();
+            aValue = (categories[a.id] || '(Not set)').toLowerCase();
+            bValue = (categories[b.id] || '(Not set)').toLowerCase();
             break;
           default:
             aValue = a.date ? a.date.getTime() : 0;
@@ -296,7 +296,7 @@ export default function Home() {
         transaction.Rentedato,
         transaction.amountOut,
         transaction.amountIn,
-        categories[transaction.id] || 'Kategori'
+        categories[transaction.id] || '(Not set)'
       ]);
       
       // Combine headers and rows

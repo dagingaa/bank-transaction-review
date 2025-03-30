@@ -87,7 +87,7 @@ export function TransactionList({
         // Check if we're filtering for uncategorized transactions
         if (selectedCategoryFilters.includes(NOT_SET_CATEGORY)) {
           // If transaction has no category and we're filtering for uncategorized
-          if (!transactionCategory || transactionCategory === 'Kategori') {
+          if (!transactionCategory || transactionCategory === '(Not set)') {
             return true;
           }
         }
@@ -361,7 +361,7 @@ export function TransactionList({
                     </div>
                     <div>
                       <Select
-                        value={data.categories[transaction.id] || 'Kategori'}
+                        value={data.categories[transaction.id] || '(Not set)'}
                         onValueChange={(value) => data.handleCategoryChange(transaction.id, value)}
                       >
                         <SelectTrigger className="w-full">

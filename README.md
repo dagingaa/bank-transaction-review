@@ -1,104 +1,120 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Bank Transaction Review
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+A modern web application for importing, categorizing, analyzing, and visualizing bank transactions.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+![Bank Transaction Review](/app/opengraph-image.png)
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- **CSV Import with Smart Mapping**
+  - Import bank transactions from CSV files
+  - Intelligent column mapping with customization options
+  - Support for multiple date formats (DD.MM.YYYY, YYYY-MM-DD, MM/DD/YYYY)
+  - Handles large transaction datasets with chunked processing
 
-## Demo
+- **Transaction Management**
+  - View all transactions in a sortable, filterable table
+  - Categorize transactions individually or in bulk
+  - Filter transactions by date range
+  - Sort by date, description, amount, or category
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+- **Categories**
+  - Create, edit, and delete custom categories
+  - Save and load category presets
+  - Automated category suggestions
 
-## Deploy to Vercel
+- **Financial Analysis**
+  - Summary of total income, expenses, and balance
+  - Breakdown of transactions by category
+  - Category-specific balance calculation
+  - Negative balance highlighting
 
-Vercel deployment will guide you through creating a Supabase account and project.
+- **Data Visualization**
+  - Interactive pie charts for income categories
+  - Interactive pie charts for expense categories
+  - Visual tooltips with detailed information
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+- **Export & Sharing**
+  - Export transactions with categories to CSV
+  - Formatted exports ready for spreadsheet applications
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+- **Modern UI/UX**
+  - Clean, responsive design
+  - Dark and light mode support
+  - Built with Next.js and Tailwind CSS
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+## Technology Stack
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+- [Next.js](https://nextjs.org/) - React framework
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [shadcn/ui](https://ui.shadcn.com/) - UI components
+- [Recharts](https://recharts.org/) - Data visualization
+- [PapaParse](https://www.papaparse.com/) - CSV parsing
 
-## Clone and run locally
+## Getting Started
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+### Prerequisites
 
-2. Create a Next.js app using the Supabase Starter template npx command
+- Node.js 18.17.0 or later
+- npm, yarn, or pnpm
 
+### Installation
+
+1. Clone the repository:
    ```bash
-   npx create-next-app --example with-supabase with-supabase-app
+   git clone https://github.com/yourusername/bank-transaction-review.git
+   cd bank-transaction-review
    ```
 
+2. Install dependencies:
    ```bash
-   yarn create next-app --example with-supabase with-supabase-app
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
    ```
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
-
-3. Use `cd` to change into the app's directory
-
-   ```bash
-   cd with-supabase-app
-   ```
-
-4. Rename `.env.example` to `.env.local` and update the following:
-
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   ```
-
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://app.supabase.com/project/_/settings/api)
-
-5. You can now run the Next.js local development server:
-
+3. Start the development server:
    ```bash
    npm run dev
+   # or
+   yarn dev
+   # or
+   pnpm dev
    ```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+## Usage
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+1. **Import Transactions**
+   - Click "Import CSV" and select your bank statement CSV file
+   - Map columns to appropriate fields in your data
+   - Click "Import" to load your transactions
 
-## Feedback and issues
+2. **Manage Categories**
+   - Add custom categories using the Categories panel
+   - Save your category set for future use
+   - Apply categories to transactions
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+3. **Analyze Data**
+   - Use the transaction summary to see total income, expenses, and balance
+   - Explore the visual breakdown of categories
+   - Filter by date range to analyze specific periods
 
-## More Supabase examples
+4. **Export Results**
+   - Export your categorized transactions to CSV for use in other applications
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Privacy
+
+This application processes all data locally in your browser. No transaction data is ever sent to a server or stored in the cloud.

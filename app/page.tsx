@@ -457,7 +457,7 @@ export default function Home() {
     <div className="w-full mx-auto p-4">
       <div className="flex flex-col space-y-4 mb-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Bank Transaction Viewer</h1>
+          <h1 className="text-2xl font-bold">Bank Transaction Review</h1>
           {fileUploaded && (
             <TransactionActions
               exportToCSV={exportToCSV}

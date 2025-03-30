@@ -482,68 +482,78 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                {/* Table Header with Sort */}
+                {/* Table header - separate from virtualized list */}
                 <div className="border-b border-border">
-                  <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-2 py-3 px-4 bg-muted/50">
-                    <button 
-                      onClick={() => handleSort('date')} 
-                      className="flex items-center gap-1 font-medium text-sm hover:text-primary"
-                    >
-                      Date
-                      {sortField === 'date' ? (
-                        sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                      ) : (
-                        <ArrowUpDown className="w-4 h-4 opacity-50" />
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => handleSort('description')} 
-                      className="flex items-center gap-1 font-medium text-sm hover:text-primary text-left"
-                    >
-                      Description
-                      {sortField === 'description' ? (
-                        sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                      ) : (
-                        <ArrowUpDown className="w-4 h-4 opacity-50" />
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => handleSort('amountOut')} 
-                      className="flex items-center gap-1 font-medium text-sm hover:text-primary ml-auto"
-                    >
-                      Out
-                      {sortField === 'amountOut' ? (
-                        sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                      ) : (
-                        <ArrowUpDown className="w-4 h-4 opacity-50" />
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => handleSort('amountIn')} 
-                      className="flex items-center gap-1 font-medium text-sm hover:text-primary ml-auto"
-                    >
-                      In
-                      {sortField === 'amountIn' ? (
-                        sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                      ) : (
-                        <ArrowUpDown className="w-4 h-4 opacity-50" />
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => handleSort('category')} 
-                      className="flex items-center gap-1 font-medium text-sm hover:text-primary text-left"
-                    >
-                      Category
-                      {sortField === 'category' ? (
-                        sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                      ) : (
-                        <ArrowUpDown className="w-4 h-4 opacity-50" />
-                      )}
-                    </button>
+                  <div className="grid grid-cols-5 gap-4 p-3 bg-muted/50">
+                    <div>
+                      <button 
+                        onClick={() => handleSort('date')} 
+                        className="flex items-center gap-1 font-medium text-sm hover:text-primary"
+                      >
+                        Date
+                        {sortField === 'date' ? (
+                          sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                        ) : (
+                          <ArrowUpDown className="w-4 h-4 opacity-50" />
+                        )}
+                      </button>
+                    </div>
+                    <div>
+                      <button 
+                        onClick={() => handleSort('description')} 
+                        className="flex items-center gap-1 font-medium text-sm hover:text-primary text-left"
+                      >
+                        Description
+                        {sortField === 'description' ? (
+                          sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                        ) : (
+                          <ArrowUpDown className="w-4 h-4 opacity-50" />
+                        )}
+                      </button>
+                    </div>
+                    <div>
+                      <button 
+                        onClick={() => handleSort('amountOut')} 
+                        className="flex items-center gap-1 font-medium text-sm hover:text-primary justify-end w-full"
+                      >
+                        Out
+                        {sortField === 'amountOut' ? (
+                          sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                        ) : (
+                          <ArrowUpDown className="w-4 h-4 opacity-50" />
+                        )}
+                      </button>
+                    </div>
+                    <div>
+                      <button 
+                        onClick={() => handleSort('amountIn')} 
+                        className="flex items-center gap-1 font-medium text-sm hover:text-primary justify-end w-full"
+                      >
+                        In
+                        {sortField === 'amountIn' ? (
+                          sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                        ) : (
+                          <ArrowUpDown className="w-4 h-4 opacity-50" />
+                        )}
+                      </button>
+                    </div>
+                    <div>
+                      <button 
+                        onClick={() => handleSort('category')} 
+                        className="flex items-center gap-1 font-medium text-sm hover:text-primary text-left"
+                      >
+                        Category
+                        {sortField === 'category' ? (
+                          sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                        ) : (
+                          <ArrowUpDown className="w-4 h-4 opacity-50" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
-                
-                {/* Virtualized Table Body */}
+
+                {/* Virtualized List */}
                 {filteredTransactions.length > 0 && (
                   <List
                     height={600}
@@ -563,12 +573,12 @@ export default function Home() {
                       return (
                         <div 
                           style={style} 
-                          className={`grid grid-cols-[auto_1fr_auto_auto_auto] gap-2 px-4 py-2 items-center ${index % 2 === 0 ? 'bg-background' : 'bg-muted/20'} hover:bg-muted/50`}
+                          className={`grid grid-cols-5 gap-4 p-3 items-center ${index % 2 === 0 ? 'bg-background' : 'bg-muted/20'} hover:bg-muted/50`}
                         >
                           <div className="whitespace-nowrap">
                             {transaction.date ? formatDateForDisplay(transaction.date) : ''}
                           </div>
-                          <div className="truncate min-w-0 pr-4">
+                          <div className="truncate max-w-md">
                             {transaction.Forklaring}
                           </div>
                           <div className={`text-right ${transaction.amountOut > 0 ? 'text-red-600 dark:text-red-400' : ''}`}>
@@ -602,7 +612,7 @@ export default function Home() {
                 
                 {/* Table Footer */}
                 <div className="border-t border-border bg-muted/50">
-                  <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-2 py-3 px-4">
+                  <div className="grid grid-cols-5 gap-4 p-3">
                     <div className="font-bold">TOTAL</div>
                     <div>{filteredTransactions.length} transactions</div>
                     <div className="text-right font-bold text-red-600 dark:text-red-400">

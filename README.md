@@ -2,8 +2,6 @@
 
 A modern web application for importing, categorizing, analyzing, and visualizing bank transactions.
 
-![Bank Transaction Review](/app/opengraph-image.png)
-
 ## Features
 
 - **CSV Import with Smart Mapping**

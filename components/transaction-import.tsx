@@ -31,6 +31,8 @@ export function TransactionImport({
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string[][]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
     date: '',
     description: '',
@@ -44,6 +46,10 @@ export function TransactionImport({
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
 
+    processFile(selectedFile);
+  };
+  
+  const processFile = async (selectedFile: File) => {
     setFile(selectedFile);
     
     try {
@@ -52,6 +58,40 @@ export function TransactionImport({
     } catch (err) {
       console.error('Failed to read file:', err);
     }
+  };
+  
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const droppedFile = files[0];
+      
+      // Check file type
+      if (droppedFile.name.endsWith('.csv') || droppedFile.name.endsWith('.txt')) {
+        processFile(droppedFile);
+      } else {
+        console.error('Invalid file type. Please upload a CSV or TXT file.');
+      }
+    }
+  };
+  
+  const handleDropzoneClick = () => {
+    fileInputRef.current?.click();
   };
 
   const readFileAsText = (file: File): Promise<string> => {
@@ -180,12 +220,36 @@ export function TransactionImport({
             <Label htmlFor="file-upload" className="mb-2">
               Upload transaction file (CSV/TXT)
             </Label>
-            <Input
+            <div
+              className={`border-2 border-dashed rounded-md p-6 transition-colors ${
+                isDragging ? 'border-primary bg-primary/10' : 'border-muted-foreground/25'
+              } cursor-pointer flex flex-col items-center justify-center text-center`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={handleDropzoneClick}
+            >
+              <div className="mb-2 text-3xl text-muted-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </div>
+              <p className="mb-1 text-sm font-medium">
+                {isDragging ? 'Drop your file here' : 'Drag and drop your file here'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                or click to browse files (CSV/TXT only)
+              </p>
+            </div>
+            <input
+              ref={fileInputRef}
               id="file-upload"
               type="file"
               accept=".csv,.txt"
               onChange={handleFileSelection}
-              className="cursor-pointer"
+              className="hidden"
             />
           </div>
         ) : (

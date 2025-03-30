@@ -127,7 +127,7 @@ export function TransactionImport({
           setColumnMapping(initialMapping);
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error parsing file:', error);
       }
     });

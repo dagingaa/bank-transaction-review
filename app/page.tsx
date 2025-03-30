@@ -484,7 +484,7 @@ export default function Home() {
               <div className="overflow-x-auto">
                 {/* Table Header with Sort */}
                 <div className="border-b border-border">
-                  <div className="grid grid-cols-5 gap-2 py-3 px-4 bg-muted/50">
+                  <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-2 py-3 px-4 bg-muted/50">
                     <button 
                       onClick={() => handleSort('date')} 
                       className="flex items-center gap-1 font-medium text-sm hover:text-primary"
@@ -563,12 +563,12 @@ export default function Home() {
                       return (
                         <div 
                           style={style} 
-                          className={`grid grid-cols-5 gap-2 px-4 py-2 items-center ${index % 2 === 0 ? 'bg-background' : 'bg-muted/20'} hover:bg-muted/50`}
+                          className={`grid grid-cols-[auto_1fr_auto_auto_auto] gap-2 px-4 py-2 items-center ${index % 2 === 0 ? 'bg-background' : 'bg-muted/20'} hover:bg-muted/50`}
                         >
                           <div className="whitespace-nowrap">
                             {transaction.date ? formatDateForDisplay(transaction.date) : ''}
                           </div>
-                          <div className="truncate">
+                          <div className="truncate min-w-0 pr-4">
                             {transaction.Forklaring}
                           </div>
                           <div className={`text-right ${transaction.amountOut > 0 ? 'text-red-600 dark:text-red-400' : ''}`}>
@@ -602,7 +602,7 @@ export default function Home() {
                 
                 {/* Table Footer */}
                 <div className="border-t border-border bg-muted/50">
-                  <div className="grid grid-cols-5 gap-2 py-3 px-4">
+                  <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-2 py-3 px-4">
                     <div className="font-bold">TOTAL</div>
                     <div>{filteredTransactions.length} transactions</div>
                     <div className="text-right font-bold text-red-600 dark:text-red-400">

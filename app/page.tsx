@@ -24,24 +24,6 @@ interface Transaction {
   [key: string]: any;
 }
 
-// Initial default categories
-const DEFAULT_CATEGORIES = [
-  "(Not set)", // Default/initial value
-  "Annet", 
-  "Dag-Inge", 
-  "Dagligvarer", 
-  "Storhandel", 
-  "Tur", 
-  "Nadia", 
-  "Snack", 
-  "Spise ute", 
-  "Lunch", 
-  "Gave", 
-  "Trening", 
-  "Taxi", 
-  "Underholdning"
-];
-
 export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +32,7 @@ export default function Home() {
   const [endDate, setEndDate] = useState('');
   const [fileUploaded, setFileUploaded] = useState(false);
   const [categories, setCategories] = useState<Record<string, string>>({});
-  const [availableCategories, setAvailableCategories] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [availableCategories, setAvailableCategories] = useState<string[]>(["(Not set)"]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement> & { columnMapping: { date: string; description: string; amountIn: string; amountOut: string; category?: string } }) => {
     const file = event.target.files?.[0];
@@ -233,7 +215,7 @@ export default function Home() {
             setIsLoading(false);
           }
         },
-        error: (error) => {
+        error: (error: any) => {
           setError('Error parsing file: ' + error.message);
           setIsLoading(false);
         }

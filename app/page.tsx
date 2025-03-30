@@ -52,7 +52,7 @@ export default function Home() {
   const [categories, setCategories] = useState<Record<string, string>>({});
   const [availableCategories, setAvailableCategories] = useState<string[]>(DEFAULT_CATEGORIES);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement> & { columnMapping: { date: string; description: string; amountIn: string; amountOut: string; category?: string } }) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -63,7 +63,7 @@ export default function Home() {
     
     try {
       const fileContent = await readFileAsText(file);
-      parseTransactions(fileContent);
+      parseTransactionsWithMapping(fileContent, event.columnMapping);
       setFileUploaded(true);
     } catch (err) {
       setError('Failed to read file: ' + (err as Error).message);
@@ -79,12 +79,11 @@ export default function Home() {
       reader.readAsText(file);
     });
   };
-
-  const parseTransactions = (content: string) => {
+  
+  const parseTransactionsWithMapping = (content: string, columnMapping: { date: string; description: string; amountIn: string; amountOut: string; category?: string }) => {
     // Use a web worker or delayed execution to avoid blocking the UI
     setTimeout(() => {
       Papa.parse(content, {
-        delimiter: ';',
         header: true,
         skipEmptyLines: true,
         dynamicTyping: true,
@@ -107,21 +106,72 @@ export default function Home() {
               const chunk = data.slice(startIndex, endIndex);
               
               const processedChunk = chunk.map((item: any) => {
-                // Convert string dates to Date objects
-                const dateParts = item.Dato ? item.Dato.split('.') : [];
-                const date = dateParts.length === 3 
-                  ? new Date(dateParts[2], dateParts[1] - 1, dateParts[0])
-                  : null;
+                // Get values from the mapped columns
+                const dateValue = item[columnMapping.date];
+                const description = item[columnMapping.description];
+                const amountIn = parseFloat(item[columnMapping.amountIn]) || 0;
+                const amountOut = parseFloat(item[columnMapping.amountOut]) || 0;
+                const category = columnMapping.category ? item[columnMapping.category] : undefined;
+                
+                // Try to parse the date intelligently from common formats
+                let date: Date | null = null;
+                
+                if (dateValue) {
+                  // Try to parse the date intelligently
+                  if (typeof dateValue === 'string') {
+                    // Try DD.MM.YYYY format (common in Europe)
+                    const euroFormat = /(\d{1,2})\.(\d{1,2})\.(\d{4})/;
+                    const euroMatch = dateValue.match(euroFormat);
+                    
+                    if (euroMatch) {
+                      const [_, day, month, year] = euroMatch;
+                      date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                    } else {
+                      // Try YYYY-MM-DD format (ISO)
+                      const isoFormat = /(\d{4})-(\d{1,2})-(\d{1,2})/;
+                      const isoMatch = dateValue.match(isoFormat);
+                      
+                      if (isoMatch) {
+                        const [_, year, month, day] = isoMatch;
+                        date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                      } else {
+                        // Try MM/DD/YYYY format (US)
+                        const usFormat = /(\d{1,2})\/(\d{1,2})\/(\d{4})/;
+                        const usMatch = dateValue.match(usFormat);
+                        
+                        if (usMatch) {
+                          const [_, month, day, year] = usMatch;
+                          date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        } else {
+                          // Last resort, try using JavaScript's Date parsing
+                          const parsedDate = new Date(dateValue);
+                          date = isNaN(parsedDate.getTime()) ? null : parsedDate;
+                        }
+                      }
+                    }
+                  } else if (dateValue instanceof Date) {
+                    date = dateValue;
+                  }
+                }
 
                 // Create a unique ID for each transaction
-                const id = `${item.Dato || ''}_${item.Forklaring || ''}_${Math.random().toString(36).substr(2, 9)}`;
+                const id = `${dateValue || ''}_${description || ''}_${Math.random().toString(36).substr(2, 9)}`;
+                
+                // If category was mapped, add it to the categories state
+                if (category && category.trim()) {
+                  setCategories(prev => ({
+                    ...prev,
+                    [id]: category.trim()
+                  }));
+                }
 
                 return {
                   ...item,
                   id,
                   date,
-                  amountOut: parseFloat(item['Ut fra konto']) || 0,
-                  amountIn: parseFloat(item['Inn på konto']) || 0
+                  Forklaring: description, // Keep the original field for compatibility
+                  amountOut,
+                  amountIn
                 };
               });
 

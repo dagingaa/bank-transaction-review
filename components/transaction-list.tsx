@@ -2,11 +2,20 @@
 
 import React, { useState, useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { ArrowUpDown, ArrowUp, ArrowDown, Search, CheckCircle } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, CheckCircle, Filter, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { 
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 interface Transaction {
   id: string;
@@ -46,14 +55,36 @@ export function TransactionList({
 }: TransactionListProps) {
   const [descriptionFilter, setDescriptionFilter] = useState('');
   const [selectedBulkCategory, setSelectedBulkCategory] = useState('');
+  const [selectedCategoryFilters, setSelectedCategoryFilters] = useState<string[]>([]);
+  
+  // Get list of all categories currently in use
+  const usedCategories = useMemo(() => {
+    const uniqueCategories = new Set<string>();
+    Object.values(categories).forEach(category => {
+      if (category) uniqueCategories.add(category);
+    });
+    return Array.from(uniqueCategories).sort();
+  }, [categories]);
   
   const filteredTransactions = useMemo(() => {
-    if (!descriptionFilter) return transactions;
+    let filtered = transactions;
     
-    return transactions.filter(transaction => 
-      transaction.Forklaring?.toLowerCase().includes(descriptionFilter.toLowerCase())
-    );
-  }, [transactions, descriptionFilter]);
+    // Apply description filter
+    if (descriptionFilter) {
+      filtered = filtered.filter(transaction => 
+        transaction.Forklaring?.toLowerCase().includes(descriptionFilter.toLowerCase())
+      );
+    }
+    
+    // Apply category filters
+    if (selectedCategoryFilters.length > 0) {
+      filtered = filtered.filter(transaction => 
+        categories[transaction.id] && selectedCategoryFilters.includes(categories[transaction.id])
+      );
+    }
+    
+    return filtered;
+  }, [transactions, descriptionFilter, categories, selectedCategoryFilters]);
   
   const handleApplyAllCategories = () => {
     if (!selectedBulkCategory) return;
@@ -63,6 +94,20 @@ export function TransactionList({
     });
   };
   
+  const toggleCategoryFilter = (category: string) => {
+    setSelectedCategoryFilters(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(c => c !== category);
+      } else {
+        return [...prev, category];
+      }
+    });
+  };
+  
+  const clearAllCategoryFilters = () => {
+    setSelectedCategoryFilters([]);
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -70,43 +115,72 @@ export function TransactionList({
         <CardDescription>All transactions in the selected date range</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-4 flex items-center gap-2 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Filter by description..."
-              value={descriptionFilter}
-              onChange={(e) => setDescriptionFilter(e.target.value)}
-              className="pl-8"
-            />
+        <div className="mb-4 flex flex-col gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Filter by description..."
+                value={descriptionFilter}
+                onChange={(e) => setDescriptionFilter(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Select value={selectedBulkCategory} onValueChange={setSelectedBulkCategory}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleApplyAllCategories}
+                disabled={!selectedBulkCategory || filteredTransactions.length === 0}
+                className="whitespace-nowrap"
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Apply to {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
+              </Button>
+            </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Select value={selectedBulkCategory} onValueChange={setSelectedBulkCategory}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleApplyAllCategories}
-              disabled={!selectedBulkCategory || filteredTransactions.length === 0}
-              className="whitespace-nowrap"
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Apply to {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
-            </Button>
-          </div>
+          {/* Active filters display */}
+          {selectedCategoryFilters.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2">
+              <div className="text-sm text-muted-foreground py-1">Active filters:</div>
+              {selectedCategoryFilters.map(category => (
+                <Badge key={category} variant="secondary" className="gap-1 px-2 py-1">
+                  {category}
+                  <button 
+                    onClick={() => toggleCategoryFilter(category)}
+                    className="ml-1 rounded-full hover:bg-muted"
+                  >
+                    <X className="h-3 w-3" />
+                    <span className="sr-only">Remove {category} filter</span>
+                  </button>
+                </Badge>
+              ))}
+              <Button
+                variant="ghost" 
+                size="sm" 
+                onClick={clearAllCategoryFilters}
+                className="h-6 px-2 text-xs"
+              >
+                Clear all
+              </Button>
+            </div>
+          )}
         </div>
         <div className="overflow-x-auto">
           {/* Table header - separate from virtualized list */}
@@ -164,7 +238,7 @@ export function TransactionList({
                   )}
                 </button>
               </div>
-              <div>
+              <div className="flex items-center justify-between">
                 <button 
                   onClick={() => handleSort('category')} 
                   className="flex items-center gap-1 font-medium text-sm hover:text-primary text-left"
@@ -176,6 +250,52 @@ export function TransactionList({
                     <ArrowUpDown className="w-4 h-4 opacity-50" />
                   )}
                 </button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button 
+                      className={`p-1 rounded-md transition-colors ${selectedCategoryFilters.length > 0 ? 'text-primary bg-muted hover:bg-muted/80' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                      aria-label="Filter by category"
+                    >
+                      <Filter className="w-4 h-4" />
+                      {selectedCategoryFilters.length > 0 && (
+                        <span className="sr-only">
+                          {selectedCategoryFilters.length} {selectedCategoryFilters.length === 1 ? 'filter' : 'filters'} active
+                        </span>
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="flex items-center justify-between">
+                      <span>Filter by Category</span>
+                      {selectedCategoryFilters.length > 0 && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={clearAllCategoryFilters}
+                          className="h-auto p-1 text-xs"
+                        >
+                          Clear all
+                        </Button>
+                      )}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {usedCategories.map(category => (
+                      <DropdownMenuCheckboxItem
+                        key={category}
+                        checked={selectedCategoryFilters.includes(category)}
+                        onCheckedChange={() => toggleCategoryFilter(category)}
+                      >
+                        {category}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                    {usedCategories.length === 0 && (
+                      <div className="px-2 py-4 text-sm text-center text-muted-foreground">
+                        No categories assigned yet
+                      </div>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>

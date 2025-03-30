@@ -20,8 +20,7 @@ interface Preset {
   isSystem?: boolean; // Flag for system presets that shouldn't be deleted/renamed
 }
 
-// Local storage keys
-const STORAGE_KEY = 'bank-transaction-viewer-categories';
+// Local storage key
 const PRESETS_KEY = 'bank-transaction-viewer-category-presets';
 
 // Default preset names
@@ -60,9 +59,15 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
           categories: [...categories]
         };
         
-        // Update state and localStorage
+        // Update state
         setPresets(updatedPresets);
-        localStorage.setItem(PRESETS_KEY, JSON.stringify(updatedPresets));
+        
+        // Only save to localStorage if this is not the Imported data preset
+        if (selectedPresetId !== IMPORTED_PRESET_NAME) {
+          // Filter out Imported data preset before saving
+          const presetsToSave = updatedPresets.filter(preset => preset.name !== IMPORTED_PRESET_NAME);
+          localStorage.setItem(PRESETS_KEY, JSON.stringify(presetsToSave));
+        }
         
         // If this is the "Imported data" preset, make sure the isSystem flag is maintained
         if (selectedPresetId === IMPORTED_PRESET_NAME) {
@@ -79,23 +84,6 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
     initialMountRef.current = false;
     
     try {
-      // First, try to load saved categories
-      const savedCategories = localStorage.getItem(STORAGE_KEY);
-      let loadedCategories: string[] = [];
-      
-      if (savedCategories) {
-        try {
-          const parsed = JSON.parse(savedCategories);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            console.log('Loaded categories from localStorage:', parsed);
-            loadedCategories = parsed;
-            onCategoriesChange(parsed);
-          }
-        } catch (e) {
-          console.error('Error parsing saved categories:', e);
-        }
-      }
-
       // Create an imported preset based on current categories
       const initialCategories = categories.length > 0 ? categories : ["(Not set)"];
       const importedPreset: Preset = {
@@ -114,16 +102,16 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
           if (Array.isArray(parsed) && parsed.length > 0) {
             console.log('Loaded presets from localStorage:', parsed);
             
-            // Filter out any existing imported preset (will be replaced)
-            loadedPresets = parsed.filter(preset => preset.name !== IMPORTED_PRESET_NAME);
+            // Load saved presets, don't filter out imported preset here since it's not stored
+            loadedPresets = parsed;
             
             // Add the imported preset to the beginning
             loadedPresets = [importedPreset, ...loadedPresets];
             
             setPresets(loadedPresets);
             
-            // Select the first preset by default
-            setSelectedPresetId(loadedPresets[0].name);
+            // Select the imported preset by default
+            setSelectedPresetId(IMPORTED_PRESET_NAME);
           } else {
             console.warn('Saved presets are not in the expected format:', parsed);
           }
@@ -145,22 +133,16 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
         setPresets([importedPreset, defaultPreset]);
         setSelectedPresetId(IMPORTED_PRESET_NAME); // Select the imported preset by default
         
-        // Save to localStorage
-        localStorage.setItem(PRESETS_KEY, JSON.stringify([importedPreset, defaultPreset]));
+        // Save only the default preset to localStorage (exclude Imported data)
+        localStorage.setItem(PRESETS_KEY, JSON.stringify([defaultPreset]));
       }
     } catch (error) {
       console.error('General error loading from localStorage:', error);
     }
   }, []);
 
-  // Save categories to localStorage when they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
-    } catch (error) {
-      console.error('Error saving categories to localStorage:', error);
-    }
-  }, [categories]);
+  // We don't save categories directly to localStorage anymore
+  // All categories are stored via presets
   
   // Keep the "Imported data" preset updated with categories from newly imported files
   useEffect(() => {
@@ -197,8 +179,8 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
         // Update presets without changing selected preset
         setPresets(updatedPresets);
         
-        // Save to localStorage
-        localStorage.setItem(PRESETS_KEY, JSON.stringify(updatedPresets));
+        // No need to save to localStorage for the Imported data preset
+        // Imported data should only be managed in memory
       }
     }
   }, [categories, presets, selectedPresetId]);
@@ -208,9 +190,11 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
     try {
       // Make sure we only save if presets is not empty
       if (presets.length > 0) {
+        // Filter out the Imported data preset before saving to localStorage
+        const presetsToSave = presets.filter(preset => preset.name !== IMPORTED_PRESET_NAME);
         // Log for debugging
-        console.log('Saving presets to localStorage:', presets);
-        localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+        console.log('Saving presets to localStorage:', presetsToSave);
+        localStorage.setItem(PRESETS_KEY, JSON.stringify(presetsToSave));
       }
     } catch (error) {
       console.error('Error saving presets to localStorage:', error);
@@ -362,10 +346,11 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
     // Update state
     setPresets(updatedPresets);
     
-    // Explicitly save to localStorage
+    // Explicitly save to localStorage (excluding Imported data preset)
     try {
-      console.log('Directly saving updated presets after delete to localStorage:', updatedPresets);
-      localStorage.setItem(PRESETS_KEY, JSON.stringify(updatedPresets));
+      const presetsToSave = updatedPresets.filter(preset => preset.name !== IMPORTED_PRESET_NAME);
+      console.log('Directly saving updated presets after delete to localStorage:', presetsToSave);
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(presetsToSave));
     } catch (error) {
       console.error('Error directly saving presets after delete to localStorage:', error);
     }
@@ -393,7 +378,7 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
         
         setPresets([importedPreset, defaultPreset]);
         setSelectedPresetId(IMPORTED_PRESET_NAME);
-        localStorage.setItem(PRESETS_KEY, JSON.stringify([importedPreset, defaultPreset]));
+        localStorage.setItem(PRESETS_KEY, JSON.stringify([defaultPreset]));
         
         // Set to default category
         onCategoriesChange(["(Not set)"]);

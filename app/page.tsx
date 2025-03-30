@@ -10,6 +10,7 @@ import { TransactionList } from "@/components/transaction-list";
 import { TransactionSummary } from "@/components/transaction-summary";
 import { TransactionImport } from "@/components/transaction-import";
 import { TransactionFilter } from "@/components/transaction-filter";
+import { Categories } from "@/components/categories";
 
 interface Transaction {
   id: string;
@@ -22,7 +23,8 @@ interface Transaction {
   [key: string]: any;
 }
 
-const CATEGORIES = [
+// Initial default categories
+const DEFAULT_CATEGORIES = [
   "Kategori", // Default/initial value
   "Annet", 
   "Dag-Inge", 
@@ -47,6 +49,7 @@ export default function Home() {
   const [endDate, setEndDate] = useState('');
   const [fileUploaded, setFileUploaded] = useState(false);
   const [categories, setCategories] = useState<Record<string, string>>({});
+  const [availableCategories, setAvailableCategories] = useState<string[]>(DEFAULT_CATEGORIES);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -54,7 +57,8 @@ export default function Home() {
 
     setIsLoading(true);
     setError('');
-    setCategories({}); // Reset categories when a new file is uploaded
+    setCategories({}); // Reset transaction-to-category mapping when a new file is uploaded
+    // Note: We're not resetting availableCategories to preserve user's custom categories
     
     try {
       const fileContent = await readFileAsText(file);
@@ -345,19 +349,25 @@ export default function Home() {
     const totals: Record<string, { in: number; out: number }> = {};
     
     // Initialize totals for all categories
-    CATEGORIES.forEach(category => {
+    availableCategories.forEach(category => {
       totals[category] = { in: 0, out: 0 };
     });
     
     for (let i = 0; i < filteredTransactions.length; i++) {
       const transaction = filteredTransactions[i];
       const category = categories[transaction.id] || 'Kategori';
+      
+      // Ensure the category exists in totals (in case it's used but was removed from availableCategories)
+      if (!totals[category]) {
+        totals[category] = { in: 0, out: 0 };
+      }
+      
       totals[category].in += transaction.amountIn || 0;
       totals[category].out += transaction.amountOut || 0;
     }
     
     return totals;
-  }, [filteredTransactions, categories]);
+  }, [filteredTransactions, categories, availableCategories]);
 
   return (
     <div className="w-full mx-auto p-4">
@@ -371,6 +381,13 @@ export default function Home() {
       
       {fileUploaded && (
         <>
+          <div className="mb-4">
+            <Categories 
+              categories={availableCategories} 
+              onCategoriesChange={setAvailableCategories} 
+            />
+          </div>
+
           <TransactionFilter
             startDate={startDate}
             endDate={endDate}
@@ -392,7 +409,7 @@ export default function Home() {
             categories={categories}
             handleCategoryChange={handleCategoryChange}
             formatDateForDisplay={formatDateForDisplay}
-            CATEGORIES={CATEGORIES}
+            CATEGORIES={availableCategories}
             handleSort={handleSort}
             sortField={sortField}
             sortDirection={sortDirection}

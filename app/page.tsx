@@ -371,7 +371,18 @@ export default function Home() {
 
   return (
     <div className="w-full mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Bank Transaction Viewer</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Bank Transaction Viewer</h1>
+        {fileUploaded && (
+          <TransactionFilter
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            exportToCSV={exportToCSV}
+          />
+        )}
+      </div>
       
       <TransactionImport 
         handleFileUpload={handleFileUpload}
@@ -387,14 +398,6 @@ export default function Home() {
               onCategoriesChange={setAvailableCategories} 
             />
           </div>
-
-          <TransactionFilter
-            startDate={startDate}
-            endDate={endDate}
-            setStartDate={setStartDate}
-            setEndDate={setEndDate}
-            exportToCSV={exportToCSV}
-          />
 
           <TransactionSummary
             transactionCount={filteredTransactions.length}

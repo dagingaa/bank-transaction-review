@@ -4,7 +4,6 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface TransactionFilterProps {
   startDate: string;
@@ -22,42 +21,35 @@ export function TransactionFilter({
   exportToCSV
 }: TransactionFilterProps) {
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Filter Transactions</CardTitle>
-        <CardDescription>Select date range to filter transactions</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 space-y-2">
-            <Label htmlFor="start-date">Start Date</Label>
-            <Input
-              id="start-date"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </div>
-          <div className="flex-1 space-y-2">
-            <Label htmlFor="end-date">End Date</Label>
-            <Input
-              id="end-date"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-end">
-        <Button
-          onClick={exportToCSV}
-          variant="default"
-          className="bg-green-600 hover:bg-green-700"
-        >
-          Export to CSV
-        </Button>
-      </CardFooter>
-    </Card>
+    <div className="flex items-center space-x-2">
+      <div className="flex items-center">
+        <Label htmlFor="start-date" className="mr-1 text-sm whitespace-nowrap">Start:</Label>
+        <Input
+          id="start-date"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="h-8 w-auto text-sm"
+        />
+      </div>
+      <div className="flex items-center">
+        <Label htmlFor="end-date" className="mr-1 text-sm whitespace-nowrap">End:</Label>
+        <Input
+          id="end-date"
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="h-8 w-auto text-sm"
+        />
+      </div>
+      <Button
+        onClick={exportToCSV}
+        variant="default"
+        className="bg-green-600 hover:bg-green-700 h-8 text-sm"
+        size="sm"
+      >
+        Export CSV
+      </Button>
+    </div>
   );
 }

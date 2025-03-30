@@ -58,11 +58,23 @@ export function TransactionSummary({
               .filter(([category, totals]) => (totals.in > 0 || totals.out > 0))
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([category, totals]) => (
-                <div key={category} className="p-2 border rounded">
+                <div 
+                  key={category} 
+                  className={`p-2 rounded ${
+                    totals.in - totals.out < 0 
+                      ? 'border-2 border-red-500 dark:border-red-400' 
+                      : 'border'
+                  }`}
+                >
                   <div className="font-medium">{category}</div>
                   <div className="flex justify-between">
                     <span>In: <span className="text-green-600 dark:text-green-400">{totals.in.toFixed(2)}</span></span>
                     <span>Out: <span className="text-red-600 dark:text-red-400">{totals.out.toFixed(2)}</span></span>
+                  </div>
+                  <div className="mt-1 text-right font-bold">
+                    Balance: <span className={totals.in - totals.out < 0 ? "text-red-700 dark:text-red-500" : "text-green-700 dark:text-green-500"}>
+                      {(totals.in - totals.out).toFixed(2)}
+                    </span>
                   </div>
                 </div>
               ))

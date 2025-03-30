@@ -360,7 +360,7 @@ export default function Home() {
   }, [filteredTransactions, categories]);
 
   return (
-    <div className="max-w-6xl mx-auto p-4">
+    <div className="w-full mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Bank Transaction Viewer</h1>
       
       <Card className="mb-6">
@@ -546,7 +546,7 @@ export default function Home() {
                 {/* Virtualized Table Body */}
                 {filteredTransactions.length > 0 && (
                   <List
-                    height={400}
+                    height={600}
                     width="100%"
                     itemCount={filteredTransactions.length}
                     itemSize={60}

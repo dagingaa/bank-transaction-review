@@ -355,7 +355,7 @@ export default function Home() {
     
     for (let i = 0; i < filteredTransactions.length; i++) {
       const transaction = filteredTransactions[i];
-      const category = categories[transaction.id] || 'Kategori';
+      const category = categories[transaction.id] || '(Not set)';
       
       // Ensure the category exists in totals (in case it's used but was removed from availableCategories)
       if (!totals[category]) {
@@ -369,6 +369,18 @@ export default function Home() {
     return totals;
   }, [filteredTransactions, categories, availableCategories]);
 
+  // Reset all data and start over
+  const resetFile = useCallback(() => {
+    setTransactions([]);
+    setCategories({});
+    setFileUploaded(false);
+    setStartDate('');
+    setEndDate('');
+    setError('');
+    setSortField(null);
+    setSortDirection('desc');
+  }, []);
+
   return (
     <div className="w-full mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
@@ -380,15 +392,18 @@ export default function Home() {
             setStartDate={setStartDate}
             setEndDate={setEndDate}
             exportToCSV={exportToCSV}
+            resetFile={resetFile}
           />
         )}
       </div>
       
-      <TransactionImport 
-        handleFileUpload={handleFileUpload}
-        isLoading={isLoading}
-        error={error}
-      />
+      {!fileUploaded && (
+        <TransactionImport 
+          handleFileUpload={handleFileUpload}
+          isLoading={isLoading}
+          error={error}
+        />
+      )}
       
       {fileUploaded && (
         <>

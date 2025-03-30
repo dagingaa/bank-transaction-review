@@ -4,6 +4,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Upload } from "lucide-react";
 
 interface TransactionFilterProps {
   startDate: string;
@@ -11,6 +12,7 @@ interface TransactionFilterProps {
   setStartDate: (date: string) => void;
   setEndDate: (date: string) => void;
   exportToCSV: () => void;
+  resetFile: () => void;
 }
 
 export function TransactionFilter({
@@ -18,7 +20,8 @@ export function TransactionFilter({
   endDate,
   setStartDate,
   setEndDate,
-  exportToCSV
+  exportToCSV,
+  resetFile
 }: TransactionFilterProps) {
   return (
     <div className="flex items-center space-x-2">
@@ -49,6 +52,15 @@ export function TransactionFilter({
         size="sm"
       >
         Export CSV
+      </Button>
+      <Button
+        onClick={resetFile}
+        variant="outline"
+        className="h-8 text-sm"
+        size="sm"
+      >
+        <Upload className="h-4 w-4 mr-1" />
+        Upload New File
       </Button>
     </div>
   );

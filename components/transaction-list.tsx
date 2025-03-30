@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 
+// Special filter value for uncategorized transactions
+const NOT_SET_CATEGORY = '(not set)';
+
 interface Transaction {
   id: string;
   date: Date | null;
@@ -78,9 +81,20 @@ export function TransactionList({
     
     // Apply category filters
     if (selectedCategoryFilters.length > 0) {
-      filtered = filtered.filter(transaction => 
-        categories[transaction.id] && selectedCategoryFilters.includes(categories[transaction.id])
-      );
+      filtered = filtered.filter(transaction => {
+        const transactionCategory = categories[transaction.id];
+        
+        // Check if we're filtering for uncategorized transactions
+        if (selectedCategoryFilters.includes(NOT_SET_CATEGORY)) {
+          // If transaction has no category and we're filtering for uncategorized
+          if (!transactionCategory || transactionCategory === 'Kategori') {
+            return true;
+          }
+        }
+        
+        // Standard category filtering
+        return transactionCategory && selectedCategoryFilters.includes(transactionCategory);
+      });
     }
     
     return filtered;
@@ -280,6 +294,16 @@ export function TransactionList({
                       )}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={selectedCategoryFilters.includes(NOT_SET_CATEGORY)}
+                      onCheckedChange={() => toggleCategoryFilter(NOT_SET_CATEGORY)}
+                      className="font-medium text-muted-foreground"
+                    >
+                      {NOT_SET_CATEGORY}
+                    </DropdownMenuCheckboxItem>
+                    
+                    {usedCategories.length > 0 && <DropdownMenuSeparator />}
+                    
                     {usedCategories.map(category => (
                       <DropdownMenuCheckboxItem
                         key={category}
@@ -289,6 +313,7 @@ export function TransactionList({
                         {category}
                       </DropdownMenuCheckboxItem>
                     ))}
+                    
                     {usedCategories.length === 0 && (
                       <div className="px-2 py-4 text-sm text-center text-muted-foreground">
                         No categories assigned yet

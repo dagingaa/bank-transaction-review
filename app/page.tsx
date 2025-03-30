@@ -2,6 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 
 interface Transaction {
   id: string;
@@ -124,7 +130,7 @@ export default function Home() {
         }
         setIsLoading(false);
       },
-      error: (error: any) => {
+      error: (error) => {
         setError('Error parsing file: ' + error.message);
         setIsLoading(false);
       }
@@ -274,76 +280,97 @@ export default function Home() {
     <div className="max-w-6xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Bank Transaction Viewer</h1>
       
-      <div className="bg-white shadow rounded-lg p-6 mb-6 dark:bg-gray-800">
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Upload transaction file (CSV/TXT)
-          </label>
-          <input
-            type="file"
-            accept=".csv,.txt"
-            onChange={handleFileUpload}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:text-gray-400 dark:file:bg-gray-700 dark:file:text-gray-200"
-          />
-        </div>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Transaction Import</CardTitle>
+          <CardDescription>Upload your bank transaction data in CSV format</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <Label htmlFor="file-upload" className="mb-2">
+              Upload transaction file (CSV/TXT)
+            </Label>
+            <Input
+              id="file-upload"
+              type="file"
+              accept=".csv,.txt"
+              onChange={handleFileUpload}
+              className="cursor-pointer"
+            />
+          </div>
 
-        {isLoading && <p className="text-gray-600 dark:text-gray-400">Loading transactions...</p>}
-        {error && <p className="text-red-600 dark:text-red-400">{error}</p>}
-        
-        {fileUploaded && (
-          <div className="mt-6">
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
+          {isLoading && <p className="text-muted-foreground">Loading transactions...</p>}
+          {error && <p className="text-destructive">{error}</p>}
+        </CardContent>
+      </Card>
+      
+      {fileUploaded && (
+        <>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Filter Transactions</CardTitle>
+              <CardDescription>Select date range to filter transactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="flex-1 space-y-2">
+                  <Label htmlFor="start-date">Start Date</Label>
+                  <Input
+                    id="start-date"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <Label htmlFor="end-date">End Date</Label>
+                  <Input
+                    id="end-date"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
               </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end mb-4">
-              <button
+            </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button
                 onClick={exportToCSV}
-                className="px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                variant="default"
+                className="bg-green-600 hover:bg-green-700"
               >
                 Export to CSV
-              </button>
-            </div>
+              </Button>
+            </CardFooter>
+          </Card>
 
-            <div className="bg-gray-50 p-4 rounded-md mb-4 dark:bg-gray-700">
-              <div className="flex flex-wrap gap-4 mb-4">
-                <div className="text-sm">
-                  <span className="font-medium">Total Transactions:</span> {filteredTransactions.length}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Transaction Summary</CardTitle>
+              <CardDescription>Overview of your transaction data</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-4 mb-6">
+                <div className="bg-muted p-3 rounded-md">
+                  <span className="font-medium block">Total Transactions</span>
+                  <span className="text-xl">{filteredTransactions.length}</span>
                 </div>
-                <div className="text-sm">
-                  <span className="font-medium">Total Out:</span> {totalOut.toFixed(2)} NOK
+                <div className="bg-muted p-3 rounded-md">
+                  <span className="font-medium block">Total Out</span>
+                  <span className="text-xl text-red-600 dark:text-red-400">{totalOut.toFixed(2)} NOK</span>
                 </div>
-                <div className="text-sm">
-                  <span className="font-medium">Total In:</span> {totalIn.toFixed(2)} NOK
+                <div className="bg-muted p-3 rounded-md">
+                  <span className="font-medium block">Total In</span>
+                  <span className="text-xl text-green-600 dark:text-green-400">{totalIn.toFixed(2)} NOK</span>
                 </div>
-                <div className="text-sm">
-                  <span className="font-medium">Balance:</span> {balance.toFixed(2)} NOK
+                <div className="bg-muted p-3 rounded-md">
+                  <span className="font-medium block">Balance</span>
+                  <span className="text-xl">{balance.toFixed(2)} NOK</span>
                 </div>
               </div>
               
               <details className="text-sm">
-                <summary className="font-medium cursor-pointer">
+                <summary className="font-medium cursor-pointer p-2 bg-muted rounded-md">
                   Category Summary
                 </summary>
                 <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -351,7 +378,7 @@ export default function Home() {
                     .filter(([category, totals]) => (totals.in > 0 || totals.out > 0))
                     .sort(([a], [b]) => a.localeCompare(b))
                     .map(([category, totals]) => (
-                      <div key={category} className="p-2 border rounded dark:border-gray-600">
+                      <div key={category} className="p-2 border rounded">
                         <div className="font-medium">{category}</div>
                         <div className="flex justify-between">
                           <span>In: <span className="text-green-600 dark:text-green-400">{totals.in.toFixed(2)}</span></span>
@@ -362,84 +389,80 @@ export default function Home() {
                   }
                 </div>
               </details>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200 divide-y divide-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                      Date
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                      Description
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                      Out
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                      In
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                      Category
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredTransactions.map((transaction) => (
-                    <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                        {transaction.date ? formatDateForDisplay(transaction.date) : ''}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-300">
-                        {transaction.Forklaring}
-                      </td>
-                      <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${transaction.amountOut > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                        {transaction.amountOut > 0 ? transaction.amountOut.toFixed(2) : ''}
-                      </td>
-                      <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${transaction.amountIn > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                        {transaction.amountIn > 0 ? transaction.amountIn.toFixed(2) : ''}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-300">
-                        <select
-                          value={categories[transaction.id] || 'Kategori'}
-                          onChange={(e) => handleCategoryChange(transaction.id, e.target.value)}
-                          className="block w-full text-sm text-gray-700 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        >
-                          {CATEGORIES.map(category => (
-                            <option key={category} value={category}>
-                              {category}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-gray-100 border-t-2 border-gray-300 dark:bg-gray-700 dark:border-gray-600">
-                  <tr>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-gray-300">
-                      TOTAL
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-300">
-                      {filteredTransactions.length} transactions
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-right text-red-600 dark:text-red-400">
-                      {totalOut.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-right text-green-600 dark:text-green-400">
-                      {totalIn.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-300">
-                      {/* Empty cell for category column */}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Transaction List</CardTitle>
+              <CardDescription>All transactions in the selected date range</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="text-right">Out</TableHead>
+                      <TableHead className="text-right">In</TableHead>
+                      <TableHead>Category</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="whitespace-nowrap">
+                          {transaction.date ? formatDateForDisplay(transaction.date) : ''}
+                        </TableCell>
+                        <TableCell>
+                          {transaction.Forklaring}
+                        </TableCell>
+                        <TableCell className={`text-right ${transaction.amountOut > 0 ? 'text-red-600 dark:text-red-400' : ''}`}>
+                          {transaction.amountOut > 0 ? transaction.amountOut.toFixed(2) : ''}
+                        </TableCell>
+                        <TableCell className={`text-right ${transaction.amountIn > 0 ? 'text-green-600 dark:text-green-400' : ''}`}>
+                          {transaction.amountIn > 0 ? transaction.amountIn.toFixed(2) : ''}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={categories[transaction.id] || 'Kategori'}
+                            onValueChange={(value) => handleCategoryChange(transaction.id, value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {CATEGORIES.map(category => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell className="font-bold">TOTAL</TableCell>
+                      <TableCell>{filteredTransactions.length} transactions</TableCell>
+                      <TableCell className="text-right font-bold text-red-600 dark:text-red-400">
+                        {totalOut.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-green-600 dark:text-green-400">
+                        {totalIn.toFixed(2)}
+                      </TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

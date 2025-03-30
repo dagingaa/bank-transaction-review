@@ -34,10 +34,7 @@ export default function Home() {
   const [categories, setCategories] = useState<Record<string, string>>({});
   const [availableCategories, setAvailableCategories] = useState<string[]>(["(Not set)"]);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement> & { columnMapping: { date: string; description: string; amountIn: string; amountOut: string; category?: string } }) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const handleFileUpload = async (file: File, columnMapping: { date: string; description: string; amountIn: string; amountOut: string; category?: string }) => {
     setIsLoading(true);
     setError('');
     setCategories({}); // Reset transaction-to-category mapping when a new file is uploaded
@@ -45,7 +42,7 @@ export default function Home() {
     
     try {
       const fileContent = await readFileAsText(file);
-      parseTransactionsWithMapping(fileContent, event.columnMapping);
+      parseTransactionsWithMapping(fileContent, columnMapping);
       setFileUploaded(true);
     } catch (err) {
       setError('Failed to read file: ' + (err as Error).message);

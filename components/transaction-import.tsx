@@ -18,7 +18,7 @@ interface ColumnMapping {
 }
 
 interface TransactionImportProps {
-  handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  handleFileUpload: (file: File, columnMapping: ColumnMapping) => Promise<void>;
   isLoading: boolean;
   error: string;
 }
@@ -150,17 +150,8 @@ export function TransactionImport({
       return;
     }
     
-    // Create a custom event with the file and column mapping
-    const customEvent = {
-      target: {
-        files: [file]
-      },
-      // Add column mapping for the parent component to use
-      columnMapping
-    } as unknown as React.ChangeEvent<HTMLInputElement> & { columnMapping: ColumnMapping };
-    
-    // Call the parent handler with the custom event
-    await handleFileUpload(customEvent);
+    // Call the parent handler with the file and column mapping directly
+    await handleFileUpload(file, columnMapping);
   };
 
   const resetMapping = () => {

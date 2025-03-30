@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Papa from 'papaparse';
 import { FixedSizeList as List } from 'react-window';
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -188,10 +189,27 @@ export default function Home() {
     }));
   }, []);
 
-  // Memoize filtered transactions to avoid unnecessary recalculations
+  // Add sorting state
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  // Handle sorting
+  const handleSort = useCallback((field: string) => {
+    if (sortField === field) {
+      // Toggle direction if clicking on the same field
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field and default to descending
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  }, [sortField]);
+
+  // Memoize filtered and sorted transactions
   const filteredTransactions = useMemo(() => {
     if (transactions.length === 0) return [];
     
+    // Filter first
     let filtered = [...transactions];
     
     if (startDate) {
@@ -205,8 +223,50 @@ export default function Home() {
       filtered = filtered.filter(t => t.date && t.date.getTime() <= endDateTime.getTime());
     }
     
+    // Then sort
+    if (sortField) {
+      filtered.sort((a, b) => {
+        let aValue, bValue;
+        
+        // Extract the correct field values based on sort field
+        switch (sortField) {
+          case 'date':
+            aValue = a.date ? a.date.getTime() : 0;
+            bValue = b.date ? b.date.getTime() : 0;
+            break;
+          case 'description':
+            aValue = (a.Forklaring || '').toLowerCase();
+            bValue = (b.Forklaring || '').toLowerCase();
+            break;
+          case 'amountOut':
+            aValue = a.amountOut || 0;
+            bValue = b.amountOut || 0;
+            break;
+          case 'amountIn':
+            aValue = a.amountIn || 0;
+            bValue = b.amountIn || 0;
+            break;
+          case 'category':
+            aValue = (categories[a.id] || 'Kategori').toLowerCase();
+            bValue = (categories[b.id] || 'Kategori').toLowerCase();
+            break;
+          default:
+            aValue = a.date ? a.date.getTime() : 0;
+            bValue = b.date ? b.date.getTime() : 0;
+        }
+        
+        // Perform the sort based on direction
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    } else {
+      // Default sort by date if no sort field specified
+      filtered.sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
+    }
+    
     return filtered;
-  }, [transactions, startDate, endDate]);
+  }, [transactions, startDate, endDate, sortField, sortDirection, categories]);
 
   const exportToCSV = useCallback(() => {
     if (filteredTransactions.length === 0) {
@@ -422,14 +482,64 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                {/* Table Header */}
+                {/* Table Header with Sort */}
                 <div className="border-b border-border">
                   <div className="grid grid-cols-5 gap-2 py-3 px-4 bg-muted/50">
-                    <div className="font-medium text-sm">Date</div>
-                    <div className="font-medium text-sm">Description</div>
-                    <div className="font-medium text-sm text-right">Out</div>
-                    <div className="font-medium text-sm text-right">In</div>
-                    <div className="font-medium text-sm">Category</div>
+                    <button 
+                      onClick={() => handleSort('date')} 
+                      className="flex items-center gap-1 font-medium text-sm hover:text-primary"
+                    >
+                      Date
+                      {sortField === 'date' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                      ) : (
+                        <ArrowUpDown className="w-4 h-4 opacity-50" />
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => handleSort('description')} 
+                      className="flex items-center gap-1 font-medium text-sm hover:text-primary text-left"
+                    >
+                      Description
+                      {sortField === 'description' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                      ) : (
+                        <ArrowUpDown className="w-4 h-4 opacity-50" />
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => handleSort('amountOut')} 
+                      className="flex items-center gap-1 font-medium text-sm hover:text-primary ml-auto"
+                    >
+                      Out
+                      {sortField === 'amountOut' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                      ) : (
+                        <ArrowUpDown className="w-4 h-4 opacity-50" />
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => handleSort('amountIn')} 
+                      className="flex items-center gap-1 font-medium text-sm hover:text-primary ml-auto"
+                    >
+                      In
+                      {sortField === 'amountIn' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                      ) : (
+                        <ArrowUpDown className="w-4 h-4 opacity-50" />
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => handleSort('category')} 
+                      className="flex items-center gap-1 font-medium text-sm hover:text-primary text-left"
+                    >
+                      Category
+                      {sortField === 'category' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                      ) : (
+                        <ArrowUpDown className="w-4 h-4 opacity-50" />
+                      )}
+                    </button>
                   </div>
                 </div>
                 

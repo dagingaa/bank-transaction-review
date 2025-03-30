@@ -16,9 +16,7 @@ import { Categories } from "@/components/categories";
 interface Transaction {
   id: string;
   date: Date | null;
-  Dato?: string;
   description?: string;
-  Rentedato?: string;
   amountOut: number;
   amountIn: number;
   [key: string]: any;
@@ -334,7 +332,6 @@ export default function Home() {
       const headers = [
         'Date', 
         'Description', 
-        'Interest Date', 
         'Amount Out', 
         'Amount In',
         'Category'
@@ -344,7 +341,6 @@ export default function Home() {
       const rows = filteredTransactions.map(transaction => [
         formatDateForDisplay(transaction.date),
         transaction.description,
-        transaction.Rentedato,
         transaction.amountOut,
         transaction.amountIn,
         categories[transaction.id] || '(Not set)'

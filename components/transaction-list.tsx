@@ -23,9 +23,7 @@ const NOT_SET_CATEGORY = '(not set)';
 interface Transaction {
   id: string;
   date: Date | null;
-  Dato?: string;
   description?: string;
-  Rentedato?: string;
   amountOut: number;
   amountIn: number;
   [key: string]: any;

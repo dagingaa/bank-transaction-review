@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Papa from 'papaparse';
-import { FixedSizeList as List } from 'react-window';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { TransactionList } from "@/components/transaction-list";
+import { TransactionSummary } from "@/components/transaction-summary";
+import { TransactionImport } from "@/components/transaction-import";
+import { TransactionFilter } from "@/components/transaction-filter";
 
 interface Transaction {
   id: string;
@@ -363,270 +363,42 @@ export default function Home() {
     <div className="w-full mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Bank Transaction Viewer</h1>
       
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Transaction Import</CardTitle>
-          <CardDescription>Upload your bank transaction data in CSV format</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <Label htmlFor="file-upload" className="mb-2">
-              Upload transaction file (CSV/TXT)
-            </Label>
-            <Input
-              id="file-upload"
-              type="file"
-              accept=".csv,.txt"
-              onChange={handleFileUpload}
-              className="cursor-pointer"
-            />
-          </div>
-
-          {isLoading && <p className="text-muted-foreground">Loading transactions...</p>}
-          {error && <p className="text-destructive">{error}</p>}
-        </CardContent>
-      </Card>
+      <TransactionImport 
+        handleFileUpload={handleFileUpload}
+        isLoading={isLoading}
+        error={error}
+      />
       
       {fileUploaded && (
         <>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Filter Transactions</CardTitle>
-              <CardDescription>Select date range to filter transactions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <div className="flex-1 space-y-2">
-                  <Label htmlFor="start-date">Start Date</Label>
-                  <Input
-                    id="start-date"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <Label htmlFor="end-date">End Date</Label>
-                  <Input
-                    id="end-date"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button
-                onClick={exportToCSV}
-                variant="default"
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Export to CSV
-              </Button>
-            </CardFooter>
-          </Card>
+          <TransactionFilter
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            exportToCSV={exportToCSV}
+          />
 
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Transaction Summary</CardTitle>
-              <CardDescription>Overview of your transaction data</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-4 mb-6">
-                <div className="bg-muted p-3 rounded-md">
-                  <span className="font-medium block">Total Transactions</span>
-                  <span className="text-xl">{filteredTransactions.length}</span>
-                </div>
-                <div className="bg-muted p-3 rounded-md">
-                  <span className="font-medium block">Total Out</span>
-                  <span className="text-xl text-red-600 dark:text-red-400">{totalOut.toFixed(2)} NOK</span>
-                </div>
-                <div className="bg-muted p-3 rounded-md">
-                  <span className="font-medium block">Total In</span>
-                  <span className="text-xl text-green-600 dark:text-green-400">{totalIn.toFixed(2)} NOK</span>
-                </div>
-                <div className="bg-muted p-3 rounded-md">
-                  <span className="font-medium block">Balance</span>
-                  <span className="text-xl">{balance.toFixed(2)} NOK</span>
-                </div>
-              </div>
-              
-              <details className="text-sm">
-                <summary className="font-medium cursor-pointer p-2 bg-muted rounded-md">
-                  Category Summary
-                </summary>
-                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {Object.entries(categoryTotals)
-                    .filter(([category, totals]) => (totals.in > 0 || totals.out > 0))
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([category, totals]) => (
-                      <div key={category} className="p-2 border rounded">
-                        <div className="font-medium">{category}</div>
-                        <div className="flex justify-between">
-                          <span>In: <span className="text-green-600 dark:text-green-400">{totals.in.toFixed(2)}</span></span>
-                          <span>Out: <span className="text-red-600 dark:text-red-400">{totals.out.toFixed(2)}</span></span>
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              </details>
-            </CardContent>
-          </Card>
+          <TransactionSummary
+            transactionCount={filteredTransactions.length}
+            totalOut={totalOut}
+            totalIn={totalIn}
+            balance={balance}
+            categoryTotals={categoryTotals}
+          />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Transaction List</CardTitle>
-              <CardDescription>All transactions in the selected date range</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                {/* Table header - separate from virtualized list */}
-                <div className="border-b border-border">
-                  <div className="grid grid-cols-5 gap-4 p-3 bg-muted/50">
-                    <div>
-                      <button 
-                        onClick={() => handleSort('date')} 
-                        className="flex items-center gap-1 font-medium text-sm hover:text-primary"
-                      >
-                        Date
-                        {sortField === 'date' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                        ) : (
-                          <ArrowUpDown className="w-4 h-4 opacity-50" />
-                        )}
-                      </button>
-                    </div>
-                    <div>
-                      <button 
-                        onClick={() => handleSort('description')} 
-                        className="flex items-center gap-1 font-medium text-sm hover:text-primary text-left"
-                      >
-                        Description
-                        {sortField === 'description' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                        ) : (
-                          <ArrowUpDown className="w-4 h-4 opacity-50" />
-                        )}
-                      </button>
-                    </div>
-                    <div>
-                      <button 
-                        onClick={() => handleSort('amountOut')} 
-                        className="flex items-center gap-1 font-medium text-sm hover:text-primary justify-end w-full"
-                      >
-                        Out
-                        {sortField === 'amountOut' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                        ) : (
-                          <ArrowUpDown className="w-4 h-4 opacity-50" />
-                        )}
-                      </button>
-                    </div>
-                    <div>
-                      <button 
-                        onClick={() => handleSort('amountIn')} 
-                        className="flex items-center gap-1 font-medium text-sm hover:text-primary justify-end w-full"
-                      >
-                        In
-                        {sortField === 'amountIn' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                        ) : (
-                          <ArrowUpDown className="w-4 h-4 opacity-50" />
-                        )}
-                      </button>
-                    </div>
-                    <div>
-                      <button 
-                        onClick={() => handleSort('category')} 
-                        className="flex items-center gap-1 font-medium text-sm hover:text-primary text-left"
-                      >
-                        Category
-                        {sortField === 'category' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                        ) : (
-                          <ArrowUpDown className="w-4 h-4 opacity-50" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Virtualized List */}
-                {filteredTransactions.length > 0 && (
-                  <List
-                    height={600}
-                    width="100%"
-                    itemCount={filteredTransactions.length}
-                    itemSize={60}
-                    itemData={{
-                      transactions: filteredTransactions,
-                      categories,
-                      handleCategoryChange,
-                      formatDateForDisplay,
-                      CATEGORIES
-                    }}
-                  >
-                    {({ index, style, data }) => {
-                      const transaction = data.transactions[index];
-                      return (
-                        <div 
-                          style={style} 
-                          className={`grid grid-cols-5 gap-4 p-3 items-center ${index % 2 === 0 ? 'bg-background' : 'bg-muted/20'} hover:bg-muted/50`}
-                        >
-                          <div className="whitespace-nowrap">
-                            {transaction.date ? formatDateForDisplay(transaction.date) : ''}
-                          </div>
-                          <div className="truncate max-w-md">
-                            {transaction.Forklaring}
-                          </div>
-                          <div className={`text-right ${transaction.amountOut > 0 ? 'text-red-600 dark:text-red-400' : ''}`}>
-                            {transaction.amountOut > 0 ? transaction.amountOut.toFixed(2) : ''}
-                          </div>
-                          <div className={`text-right ${transaction.amountIn > 0 ? 'text-green-600 dark:text-green-400' : ''}`}>
-                            {transaction.amountIn > 0 ? transaction.amountIn.toFixed(2) : ''}
-                          </div>
-                          <div>
-                            <Select
-                              value={data.categories[transaction.id] || 'Kategori'}
-                              onValueChange={(value) => data.handleCategoryChange(transaction.id, value)}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {data.CATEGORIES.map(category => (
-                                  <SelectItem key={category} value={category}>
-                                    {category}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      );
-                    }}
-                  </List>
-                )}
-                
-                {/* Table Footer */}
-                <div className="border-t border-border bg-muted/50">
-                  <div className="grid grid-cols-5 gap-4 p-3">
-                    <div className="font-bold">TOTAL</div>
-                    <div>{filteredTransactions.length} transactions</div>
-                    <div className="text-right font-bold text-red-600 dark:text-red-400">
-                      {totalOut.toFixed(2)}
-                    </div>
-                    <div className="text-right font-bold text-green-600 dark:text-green-400">
-                      {totalIn.toFixed(2)}
-                    </div>
-                    <div></div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TransactionList 
+            transactions={filteredTransactions}
+            categories={categories}
+            handleCategoryChange={handleCategoryChange}
+            formatDateForDisplay={formatDateForDisplay}
+            CATEGORIES={CATEGORIES}
+            handleSort={handleSort}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            totalOut={totalOut}
+            totalIn={totalIn}
+          />
         </>
       )}
     </div>

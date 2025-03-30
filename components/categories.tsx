@@ -17,14 +17,16 @@ interface CategoriesProps {
 interface Preset {
   name: string;
   categories: string[];
+  isSystem?: boolean; // Flag for system presets that shouldn't be deleted/renamed
 }
 
 // Local storage keys
 const STORAGE_KEY = 'bank-transaction-viewer-categories';
 const PRESETS_KEY = 'bank-transaction-viewer-category-presets';
 
-// Default preset name
+// Default preset names
 const DEFAULT_PRESET_NAME = "New preset";
+const IMPORTED_PRESET_NAME = "Imported data"; // Special preset for imported categories
 
 export function Categories({ categories, onCategoriesChange }: CategoriesProps) {
   const [inputValue, setInputValue] = useState('');
@@ -33,6 +35,7 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
   const [selectedPresetId, setSelectedPresetId] = useState('');
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
+  const initialMountRef = React.useRef(true); // Ref to track initial mount
 
   // Auto-save categories to the current preset
   useEffect(() => {
@@ -60,12 +63,21 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
         // Update state and localStorage
         setPresets(updatedPresets);
         localStorage.setItem(PRESETS_KEY, JSON.stringify(updatedPresets));
+        
+        // If this is the "Imported data" preset, make sure the isSystem flag is maintained
+        if (selectedPresetId === IMPORTED_PRESET_NAME) {
+          updatedPresets[presetIndex].isSystem = true;
+        }
       }
     }
   }, [categories, selectedPresetId, presets]);
 
-  // Load categories and presets from localStorage on component mount
+  // Load categories and presets from localStorage on component mount only
   useEffect(() => {
+    // Only run on initial mount
+    if (!initialMountRef.current) return;
+    initialMountRef.current = false;
+    
     try {
       // First, try to load saved categories
       const savedCategories = localStorage.getItem(STORAGE_KEY);
@@ -84,6 +96,14 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
         }
       }
 
+      // Create an imported preset based on current categories
+      const initialCategories = categories.length > 0 ? categories : ["(Not set)"];
+      const importedPreset: Preset = {
+        name: IMPORTED_PRESET_NAME,
+        categories: initialCategories,
+        isSystem: true // Mark as system preset
+      };
+
       // Then, try to load saved presets
       const savedPresets = localStorage.getItem(PRESETS_KEY);
       let loadedPresets: Preset[] = [];
@@ -93,11 +113,17 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
           const parsed = JSON.parse(savedPresets);
           if (Array.isArray(parsed) && parsed.length > 0) {
             console.log('Loaded presets from localStorage:', parsed);
-            loadedPresets = parsed;
-            setPresets(parsed);
+            
+            // Filter out any existing imported preset (will be replaced)
+            loadedPresets = parsed.filter(preset => preset.name !== IMPORTED_PRESET_NAME);
+            
+            // Add the imported preset to the beginning
+            loadedPresets = [importedPreset, ...loadedPresets];
+            
+            setPresets(loadedPresets);
             
             // Select the first preset by default
-            setSelectedPresetId(parsed[0].name);
+            setSelectedPresetId(loadedPresets[0].name);
           } else {
             console.warn('Saved presets are not in the expected format:', parsed);
           }
@@ -108,24 +134,24 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
         console.log('No saved presets found in localStorage');
       }
       
-      // If no presets exist, create a default one with current categories
+      // If no presets exist, create default ones
       if (loadedPresets.length === 0) {
         const defaultPreset: Preset = {
           name: DEFAULT_PRESET_NAME,
-          categories: loadedCategories
+          categories: ["(Not set)"] // Start with just the default category
         };
         
-        console.log('Creating default preset:', defaultPreset);
-        setPresets([defaultPreset]);
-        setSelectedPresetId(DEFAULT_PRESET_NAME);
+        console.log('Creating default presets:', [importedPreset, defaultPreset]);
+        setPresets([importedPreset, defaultPreset]);
+        setSelectedPresetId(IMPORTED_PRESET_NAME); // Select the imported preset by default
         
         // Save to localStorage
-        localStorage.setItem(PRESETS_KEY, JSON.stringify([defaultPreset]));
+        localStorage.setItem(PRESETS_KEY, JSON.stringify([importedPreset, defaultPreset]));
       }
     } catch (error) {
       console.error('General error loading from localStorage:', error);
     }
-  }, [onCategoriesChange]);
+  }, []);
 
   // Save categories to localStorage when they change
   useEffect(() => {
@@ -135,6 +161,47 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
       console.error('Error saving categories to localStorage:', error);
     }
   }, [categories]);
+  
+  // Keep the "Imported data" preset updated with categories from newly imported files
+  useEffect(() => {
+    // Skip initial render - this only updates after categories have changed from imports
+    if (initialMountRef.current) return;
+    
+    // Skip if no categories or presets
+    if (categories.length === 0 || presets.length === 0) return;
+    
+    // Find if there is an existing Imported data preset
+    const importedPresetIndex = presets.findIndex(p => p.name === IMPORTED_PRESET_NAME);
+    
+    // Only update if there's a change in the active categories
+    if (importedPresetIndex >= 0) {
+      // Get current imported preset
+      const currentImportedPreset = presets[importedPresetIndex];
+      
+      // Only update if categories have changed and the imported preset is selected
+      // This prevents infinite loops when switching between presets
+      const categoriesChanged = JSON.stringify(currentImportedPreset.categories) !== JSON.stringify(categories);
+      const importedPresetActive = selectedPresetId === IMPORTED_PRESET_NAME;
+      
+      if (categoriesChanged && importedPresetActive) {
+        console.log('Updating "Imported data" preset with new categories');
+        
+        // Create updated preset list
+        const updatedPresets = [...presets];
+        updatedPresets[importedPresetIndex] = {
+          ...currentImportedPreset,
+          categories: [...categories],
+          isSystem: true
+        };
+        
+        // Update presets without changing selected preset
+        setPresets(updatedPresets);
+        
+        // Save to localStorage
+        localStorage.setItem(PRESETS_KEY, JSON.stringify(updatedPresets));
+      }
+    }
+  }, [categories, presets, selectedPresetId]);
   
   // Save presets to localStorage when they change
   useEffect(() => {
@@ -222,6 +289,19 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
   const handleRenamePreset = () => {
     if (!presetNameInput.trim() || !selectedPresetId) return;
     
+    // Find the preset to rename
+    const presetToRename = presets.find(p => p.name === selectedPresetId);
+    
+    // Prevent renaming system presets
+    if (presetToRename?.isSystem) {
+      console.warn(`Cannot rename system preset "${selectedPresetId}"`);
+      alert(`This preset cannot be renamed as it is a system preset.`);
+      setPresetNameInput('');
+      setIsEditingName(false);
+      setPopoverOpen(false);
+      return;
+    }
+    
     const trimmedName = presetNameInput.trim();
     
     // Check if the new name already exists (and it's not the current preset)
@@ -268,6 +348,15 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
 
   // Delete a preset
   const handleDeletePreset = (presetName: string) => {
+    // Find the preset
+    const presetToDelete = presets.find(p => p.name === presetName);
+    
+    // Prevent deletion of system presets
+    if (presetToDelete?.isSystem) {
+      console.warn(`Cannot delete system preset "${presetName}"`);
+      return;
+    }
+    
     const updatedPresets = presets.filter(p => p.name !== presetName);
     
     // Update state
@@ -290,18 +379,24 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
         // Update categories to match the newly selected preset
         onCategoriesChange([...updatedPresets[0].categories]);
       } else {
-        // Create a new default preset if no presets remain
-        const defaultPreset: Preset = {
-          name: DEFAULT_PRESET_NAME,
-          categories: [],
+        // Create new default presets if no presets remain
+        const importedPreset: Preset = {
+          name: IMPORTED_PRESET_NAME,
+          categories: ["(Not set)"],
+          isSystem: true
         };
         
-        setPresets([defaultPreset]);
-        setSelectedPresetId(DEFAULT_PRESET_NAME);
-        localStorage.setItem(PRESETS_KEY, JSON.stringify([defaultPreset]));
+        const defaultPreset: Preset = {
+          name: DEFAULT_PRESET_NAME,
+          categories: ["(Not set)"],
+        };
         
-        // Clear categories
-        onCategoriesChange([]);
+        setPresets([importedPreset, defaultPreset]);
+        setSelectedPresetId(IMPORTED_PRESET_NAME);
+        localStorage.setItem(PRESETS_KEY, JSON.stringify([importedPreset, defaultPreset]));
+        
+        // Set to default category
+        onCategoriesChange(["(Not set)"]);
       }
     }
   };
@@ -331,8 +426,13 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
                 presets.map((preset) => (
                   <SelectItem key={preset.name} value={preset.name}>
                     <div className="flex w-full items-center">
-                      <span className="truncate">
+                      <span className={`truncate ${preset.isSystem ? 'font-semibold' : ''}`}>
                         {preset.name}
+                        {preset.isSystem && preset.name === IMPORTED_PRESET_NAME && (
+                          <span className="ml-1 text-xs text-primary">
+                            (auto)
+                          </span>
+                        )}
                         <span className="ml-1 text-xs text-muted-foreground">
                           ({preset.categories.length})
                         </span>
@@ -347,34 +447,39 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
           {/* Preset management buttons */}
           {selectedPresetId && (
             <>
-              <Button
-                variant="outline"
-                size="icon"
-                title="Rename current preset"
-                onClick={() => {
-                  setIsEditingName(true);
-                  setPopoverOpen(true);
-                  setPresetNameInput(selectedPresetId);
-                }}
-              >
-                <FileEdit className="h-4 w-4" />
-                <span className="sr-only">Rename preset</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="icon"
-                title="Delete current preset"
-                onClick={() => {
-                  if (confirm(`Are you sure you want to delete the preset "${selectedPresetId}"?`)) {
-                    handleDeletePreset(selectedPresetId);
-                  }
-                }}
-                className="text-destructive hover:bg-destructive/10"
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Delete preset</span>
-              </Button>
+              {/* Only show edit/delete buttons for non-system presets */}
+              {!presets.find(p => p.name === selectedPresetId)?.isSystem && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Rename current preset"
+                    onClick={() => {
+                      setIsEditingName(true);
+                      setPopoverOpen(true);
+                      setPresetNameInput(selectedPresetId);
+                    }}
+                  >
+                    <FileEdit className="h-4 w-4" />
+                    <span className="sr-only">Rename preset</span>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Delete current preset"
+                    onClick={() => {
+                      if (confirm(`Are you sure you want to delete the preset "${selectedPresetId}"?`)) {
+                        handleDeletePreset(selectedPresetId);
+                      }
+                    }}
+                    className="text-destructive hover:bg-destructive/10"
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Delete preset</span>
+                  </Button>
+                </>
+              )}
             </>
           )}
           
@@ -488,6 +593,11 @@ export function Categories({ categories, onCategoriesChange }: CategoriesProps) 
             </p>
             <p>
               Changes to categories are automatically saved to the current preset: <strong>{selectedPresetId}</strong>
+              {selectedPresetId === IMPORTED_PRESET_NAME && (
+                <span className="ml-1 text-primary italic">
+                  (automatically updated when importing files with categories)
+                </span>
+              )}
             </p>
             <p>
               Create new preset collections using the + button in the top right.

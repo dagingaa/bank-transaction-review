@@ -197,6 +197,27 @@ export default function Home() {
                       setStartDate(formatDateForInput(minDate));
                       setEndDate(formatDateForInput(maxDate));
                     }
+                    
+                    // Extract unique categories from imported data if a category column was mapped
+                    if (columnMapping.category && columnMapping.category.length > 0) {
+                      // Get unique categories from data
+                      const importedCategories = new Set<string>();
+                      
+                      // Make sure we have the default category
+                      importedCategories.add("(Not set)");
+                      
+                      // Add categories from the data
+                      for (const transaction of sortedData) {
+                        const category = transaction[columnMapping.category];
+                        if (category && typeof category === 'string' && category.trim()) {
+                          importedCategories.add(category.trim());
+                        }
+                      }
+                      
+                      // Update availableCategories with imported categories
+                      const uniqueCategories = Array.from(importedCategories);
+                      setAvailableCategories(uniqueCategories);
+                    }
                   }
                   
                   setIsLoading(false);

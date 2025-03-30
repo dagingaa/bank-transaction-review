@@ -41,8 +41,12 @@ export default function RootLayout({
                 <div className="w-full flex justify-between items-center p-3 px-5 text-sm">
                   <div className="flex gap-5 items-center font-semibold">
                     <Link href={"/"}>Bank Transaction Review</Link>
+                    <Link href={"/settings"} className="text-muted-foreground hover:text-foreground">Settings</Link>
                   </div>
-                  <HeaderAuth />
+                  <div className="flex items-center gap-4">
+                    <ThemeSwitcher />
+                    <HeaderAuth />
+                  </div>
                 </div>
               </nav>
               <div className="flex flex-col gap-20 w-full p-5">

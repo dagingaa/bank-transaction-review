@@ -10,6 +10,7 @@ import { TransactionList } from "@/components/transaction-list";
 import { TransactionSummary } from "@/components/transaction-summary";
 import { TransactionImport } from "@/components/transaction-import";
 import { TransactionFilter } from "@/components/transaction-filter";
+import { TransactionActions } from "@/components/transaction-actions";
 import { Categories } from "@/components/categories";
 
 interface Transaction {
@@ -383,17 +384,25 @@ export default function Home() {
 
   return (
     <div className="w-full mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Bank Transaction Viewer</h1>
+      <div className="flex flex-col space-y-4 mb-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Bank Transaction Viewer</h1>
+          {fileUploaded && (
+            <TransactionActions
+              exportToCSV={exportToCSV}
+              resetFile={resetFile}
+            />
+          )}
+        </div>
         {fileUploaded && (
-          <TransactionFilter
-            startDate={startDate}
-            endDate={endDate}
-            setStartDate={setStartDate}
-            setEndDate={setEndDate}
-            exportToCSV={exportToCSV}
-            resetFile={resetFile}
-          />
+          <div className="flex justify-end">
+            <TransactionFilter
+              startDate={startDate}
+              endDate={endDate}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+            />
+          </div>
         )}
       </div>
       

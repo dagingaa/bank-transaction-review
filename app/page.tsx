@@ -119,10 +119,10 @@ export default function Home() {
                 const description = item[columnMapping.description];
                 // remove commas from amountIn and amountOut
                 const amountIn =
-                  parseFloat(item[columnMapping.amountIn].replace(/,/g, "")) ||
+                  parseFloat(item[columnMapping.amountIn]?.replace(/,/g, "")) ||
                   0;
                 const amountOut =
-                  parseFloat(item[columnMapping.amountOut].replace(/,/g, "")) ||
+                  parseFloat(item[columnMapping.amountOut]?.replace(/,/g, "")) ||
                   0;
                 const category = columnMapping.category
                   ? item[columnMapping.category]
